@@ -1,0 +1,534 @@
+{
+  "metadata": {
+    "name": "MAP Bengaluru Knowledgebase",
+    "compiled_at": "2025-10-08T06:06:55.341424+00:00",
+    "timezone": "Asia/Kolkata",
+    "version": "v1.0",
+    "notes": "Paraphrased summaries + factual details gathered from public MAP pages and reputable sources; includes links for provenance."
+  },
+  "core": {
+    "museum": {
+      "name": "Museum of Art & Photography (MAP)",
+      "aka": [
+        "MAP Bengaluru",
+        "Museum of Art and Photography"
+      ],
+      "type": "Private art museum",
+      "address": "Kasturba Road Cross, Bengaluru, Karnataka 560001, India",
+      "geo": {
+        "lat": 12.97461,
+        "lng": 77.59649
+      },
+      "opening_date_public": "2023-02-18",
+      "hours": {
+        "monday": "Closed",
+        "tue": "10:00–18:30 (Free entry 14:00–18:30)",
+        "wed_thu": "10:00–18:30",
+        "fri_sat": "10:00–19:30",
+        "sun": "10:00–18:30"
+      },
+      "tickets": {
+        "free_entry_window": "Tuesdays 14:00–18:30",
+        "notes": "Tickets can be booked online; some events may be paid. Members get access benefits."
+      },
+      "getting_there": {
+        "nearest_metro": [
+          "Cubbon Park",
+          "MG Road",
+          "Vidhana Soudha"
+        ],
+        "nearby_bus_stops": [
+          {
+            "name": "Kasturba Road",
+            "distance_m": 220
+          },
+          {
+            "name": "UB City",
+            "distance_m": 400
+          },
+          {
+            "name": "Richmond Traffic Police Station",
+            "distance_m": 500
+          },
+          {
+            "name": "Museum Road",
+            "distance_m": 850
+          },
+          {
+            "name": "SBI Head Office",
+            "distance_m": 1100
+          }
+        ],
+        "parking": {
+          "onsite": "None",
+          "options": [
+            "Paid parking opposite the museum",
+            "Roadside parking near Bande Mutt (check signage)"
+          ]
+        },
+        "landmarks": [
+          "UB City",
+          "Cubbon Park",
+          "Vidhana Soudha"
+        ]
+      },
+      "facilities": {
+        "restaurant": "Cumulus by SMOOR (rooftop, alfresco)",
+        "cafe": "On-site",
+        "shop": "MAP Store (in-museum + online)",
+        "members_lounge": true,
+        "digital_experiences": [
+          "Holograms",
+          "Kaleidoscope room",
+          "Gallery on Demand",
+          "Bloomberg Connects audio guides"
+        ]
+      },
+      "accessibility": {
+        "wheelchair_access": true,
+        "elevator": true,
+        "tactile_and_braille": true,
+        "isl_and_transcripts": true,
+        "assistive_listening": true,
+        "accessible_restrooms": true,
+        "service_animals_allowed": true,
+        "low_strobe_environments": true,
+        "sensory_considerations": "Quiet spaces available on request; staff can assist.",
+        "contact_for_support": "hello@map-india.org"
+      },
+      "contacts": {
+        "general_email": "hello@map-india.org",
+        "education_email": "education@map-india.org",
+        "memberships_email": "memberships@map-india.org",
+        "venue_hire": "bookings@map-india.org",
+        "press": "hello@map-india.org",
+        "contact_page": "https://map-india.org/contact-us/"
+      },
+      "leadership": {
+        "founder": "Abhishek Poddar",
+        "acting_director": "Harish Vasudevan",
+        "board_highlights": [
+          "Kiran Mazumdar-Shaw (Biocon)",
+          "Ajit Mohan (Snap Inc.)",
+          "GV Ravishankar (Peak XV)",
+          "Som Mittal (ex-NASSCOM)",
+          "Pramit Jhaveri (PJT Partners)"
+        ],
+        "curatorial_lead": "Arnika Ahldag (Director - Exhibitions & Curation)"
+      },
+      "collection_overview": {
+        "size_estimate": 60000,
+        "period_span": "10th century to present",
+        "departments": [
+          "Pre-Modern",
+          "Modern & Contemporary",
+          "Photography",
+          "Living Traditions",
+          "Popular Culture",
+          "Textiles, Craft & Design"
+        ],
+        "highlights": [
+          "Indian modernists (e.g., Tyeb Mehta, Ram Kumar)",
+          "Photography archives",
+          "Popular prints and textiles"
+        ]
+      },
+      "architecture": {
+        "architects": "Mathew & Ghosh Architects (Soumitro Ghosh & Nisha Mathew Ghosh)",
+        "area_sqm": 4089,
+        "floors": 5,
+        "design_notes": "Minimal steel facade echoing a water tank; strong accessibility focus; galleries, auditorium, research library, conservation lab and rooftop dining.",
+        "advisory_committee": [
+          "Rahul Mehrotra",
+          "Mahrukh Tarapor",
+          "late Martand Singh"
+        ],
+        "awards_mentions": [
+          "NCPEDP-Mphasis Universal Design Awards 2024 (Role Model Companies & Organizations)"
+        ]
+      },
+      "digital_guides": {
+        "bloomberg_connects": {
+          "available": true,
+          "notes": "Audio guides; Indian Sign Language tracks; subtitles & audio descriptions; plan-your-visit tools",
+          "urls": [
+            "https://map-india.org/our-digital-guide/",
+            "https://www.bloombergconnects.org/"
+          ]
+        },
+        "gallery_on_demand": true
+      },
+      "policies": {
+        "visitor_guidelines_url": "https://map-india.org/terms-and-conditions/#visitor-guidelines",
+        "accessibility_features_url": "https://map-india.org/terms-and-conditions/#accessibility-features",
+        "safeguarding_policy_url": "https://map-india.org/safeguarding-policy/",
+        "posh_policy_url": "https://map-india.org/posh-policy/",
+        "photography": "General photography for personal use typically allowed; check on-site signage and staff for any restrictions; licensing requests via hello@map-india.org."
+      },
+      "sources": [
+        "https://map-india.org/",
+        "https://map-india.org/visit-us/",
+        "https://map-india.org/about/faqs/",
+        "https://map-india.org/about/the-museum/",
+        "https://map-india.org/terms-and-conditions/",
+        "https://map-india.org/our-digital-guide/",
+        "https://en.wikipedia.org/wiki/Museum_of_Art_%26_Photography",
+        "https://www.archdaily.com/998501/the-museum-of-art-and-photography-bangalore-mathew-and-ghosh-architects"
+      ]
+    }
+  },
+  "engage": {
+    "support": {
+      "ways_to_support": [
+        "Donate",
+        "Become a Member",
+        "Patron circles / Corporate support",
+        "Volunteer & internships (see Careers)"
+      ],
+      "notes": "Donations help acquisitions, conservation, education & outreach.",
+      "sources": [
+        "https://map-india.org/support/"
+      ]
+    },
+    "memberships": {
+      "benefits": [
+        "Priority access to (many) paid/online events",
+        "Access to online exhibitions & archives",
+        "Searchable access to online collection",
+        "Stream videos in Watch section",
+        "Discounts at the store (member offers)",
+        "Preferred access at the museum (as available)"
+      ],
+      "billing": {
+        "duration": "1 year",
+        "payments": [
+          "Razorpay (cards, UPI, netbanking, wallets)",
+          "Cheques (contact memberships@map-india.org)",
+          "International card link on request"
+        ],
+        "refund_policy": "Subscriptions typically non-refundable; features continue until end of billing cycle"
+      },
+      "sources": [
+        "https://map-india.org/about/faqs/"
+      ]
+    },
+    "venue_for_hire": {
+      "email": "bookings@map-india.org",
+      "high_level_info": "Multiple hireable spaces including auditorium, terrace and more; bookings require 4–6 week notice; external photographers by request; catering coordination available.",
+      "sources": [
+        "https://map-india.org/venue-for-hire/"
+      ]
+    }
+  },
+  "programming": {
+    "exhibitions": {
+      "current": [
+        {
+          "title": "In Celestial Company",
+          "dates": {
+            "start": "2025-09-13",
+            "end": "2026-01-18"
+          },
+          "summary": "Explores mythical beings and their stories through contemporary and historic lenses.",
+          "url": "https://map-india.org/exhibition/in-celestial-company/",
+          "sources": [
+            "https://map-india.org/",
+            "https://map-india.org/exhibitions/"
+          ]
+        },
+        {
+          "title": "Shape of a Thought: Letters from Ram Kumar",
+          "dates": {
+            "start": "2025-07-26",
+            "end": "2025-10-26"
+          },
+          "summary": "Rare letters and artworks illuminate Ram Kumar’s practice.",
+          "url": "https://map-india.org/exhibition/shape-of-a-thought-letters-from-ram-kumar/",
+          "sources": [
+            "https://map-india.org/exhibition/shape-of-a-thought-letters-from-ram-kumar/"
+          ]
+        },
+        {
+          "title": "Ticket Tika Chaap: The Art of the Trademark in Indo-British Textile Trade",
+          "dates": {
+            "start": "2025-03-22",
+            "end": "2025-11-02"
+          },
+          "summary": "Colonial-era textile labels as early branding and visual culture.",
+          "url": "https://map-india.org/exhibition/ticket-tika-chaap-the-art-of-the-trademark-in-indo-british-textile-trade/",
+          "sources": [
+            "https://map-india.org/exhibition/ticket-tika-chaap-the-art-of-the-trademark-in-indo-british-textile-trade/",
+            "https://www.wallpaper.com/art/exhibitions-shows/indo-british-textile-labels-map-bengaluru-india"
+          ]
+        },
+        {
+          "title": "VISIBLE/INVISIBLE: Representation of Women in Art through the MAP Collection",
+          "dates": {
+            "start": "2023-02-18",
+            "end": "2025-12-01"
+          },
+          "summary": "Women’s representation in South Asian art across media and time.",
+          "url": "https://map-india.org/exhibition/visible-invisible/",
+          "sources": [
+            "https://map-india.org/exhibition/visible-invisible/"
+          ]
+        }
+      ],
+      "installations": [
+        {
+          "title": "COBRA 1:1",
+          "dates": {
+            "start": "2023-02-18"
+          },
+          "summary": "Installation on view as part of MAP’s opening displays.",
+          "url": "https://map-india.org/exhibition/cobra-1-1/",
+          "sources": [
+            "https://map-india.org/exhibitions/"
+          ]
+        },
+        {
+          "title": "Welcome Desk and Rock Formation Tower",
+          "dates": {
+            "start": "2023-02-18"
+          },
+          "summary": "Site-specific formation adjacent to the welcome area.",
+          "url": "https://map-india.org/exhibition/welcome-desk-and-rock-formation-tower/",
+          "sources": [
+            "https://map-india.org/exhibitions/"
+          ]
+        },
+        {
+          "title": "Bouke de Vries: Memory Vessels",
+          "dates": {
+            "start": "2025-08-23",
+            "end": "2026-01-04"
+          },
+          "summary": "Contemporary reconstruction of shattered ceramics as memory.",
+          "url": "https://map-india.org/exhibition/bouke-de-vries-memory-vessels/",
+          "sources": [
+            "https://map-india.org/exhibition/bouke-de-vries-memory-vessels/"
+          ]
+        },
+        {
+          "title": "Continuous Coexistences II",
+          "dates": {
+            "start": "2025-07-12",
+            "end": "2025-11-09"
+          },
+          "summary": "Explorations of shared spaces and ecologies.",
+          "url": "https://map-india.org/exhibition/continuous-coexistences-ii/",
+          "sources": [
+            "https://map-india.org/exhibition/continuous-coexistences-ii/"
+          ]
+        }
+      ],
+      "pages": {
+        "root": "https://map-india.org/exhibitions/",
+        "upcoming": "https://map-india.org/exhibitions/upcoming/",
+        "past": "https://map-india.org/exhibitions/past/"
+      }
+    },
+    "events": {
+      "upcoming_sample_oct_2025": [
+        {
+          "title": "Talk: Art as Resistance — the Iconography of Amma",
+          "date": "2025-10-09",
+          "type": "Talk/Discussion",
+          "url": "https://map-india.org/content-archives/",
+          "sources": [
+            "https://map-india.org/content-archives/"
+          ]
+        },
+        {
+          "title": "Pride After Hours at MAP",
+          "date": "2025-10-10",
+          "type": "After-hours event",
+          "url": "https://map-india.org/content-archives/",
+          "sources": [
+            "https://map-india.org/content-archives/"
+          ]
+        },
+        {
+          "title": "Film Screening: Ek Tha Chun Chun",
+          "date": "2025-10-11",
+          "type": "Film",
+          "url": "https://map-india.org/content-archives/",
+          "sources": [
+            "https://map-india.org/content-archives/"
+          ]
+        },
+        {
+          "title": "Family Day @ MAP (Get Goggling!)",
+          "date": "2025-10-12",
+          "type": "Kids & Family",
+          "url": "https://map-india.org/content-archives/",
+          "sources": [
+            "https://map-india.org/content-archives/"
+          ]
+        },
+        {
+          "title": "Sonic Garden Live",
+          "date": "2025-10-13",
+          "type": "Music",
+          "url": "https://map-india.org/content-archives/",
+          "sources": [
+            "https://map-india.org/content-archives/"
+          ]
+        }
+      ],
+      "calendar_page": "https://map-india.org/events/"
+    },
+    "learn": {
+      "overview": "Education programmes for kids, teens, adults and educators; includes workshops, talks, downloadable kits and hybrid courses (MAP Academy).",
+      "academy": {
+        "offerings": [
+          "A History of Indian Craft: 1850s to the Present",
+          "Modern & Contemporary Indian Art",
+          "Encyclopedia of Art (online)"
+        ]
+      },
+      "school_outreach": {
+        "status": "Offered; outreach programmes at schools (may vary; contact education@map-india.org)."
+      },
+      "sources": [
+        "https://map-india.org/learn/",
+        "https://map-india.org/about/faqs/"
+      ]
+    },
+    "shop": {
+      "url": "https://shop.map-india.org/"
+    }
+  },
+  "press_and_external": {
+    "highlights": [
+      {
+        "title": "MAP partners with Bengaluru Airport (T2) to create cultural hub",
+        "date": "2025-06-06",
+        "summary": "Interactive digital installations, exhibits and a MAP digital archive at KIA T2; exhibition on Bhuri Bai at the international terminal.",
+        "sources": [
+          "https://timesofindia.indiatimes.com/city/bengaluru/bengaluru-airport-museum-of-art-photography-team-up-to-transform-terminal-2-into-cultural-hub/articleshow/121699971.cms"
+        ]
+      },
+      {
+        "title": "Architecture features & coverage",
+        "date": "2023-03-26",
+        "summary": "Building by Mathew & Ghosh Architects; ~4,089 m²; five floors; steel-clad facade; accessibility-forward design.",
+        "sources": [
+          "https://www.archdaily.com/998501/the-museum-of-art-and-photography-bangalore-mathew-and-ghosh-architects",
+          "https://www.mathewghosh.com/instu-map.html"
+        ]
+      },
+      {
+        "title": "AD WOW 2023 listing",
+        "date": "2023-02-15",
+        "summary": "Architectural Digest features MAP among notable works of 2023.",
+        "sources": [
+          "https://www.architecturaldigest.com/story/map-museum-art-photography"
+        ]
+      }
+    ],
+    "wikipedia_summary": {
+      "open_date": "2023-02-18",
+      "digital_launch": "2020-12 (Art (is) Life festival)",
+      "collection_count_claim": "20,000+ per Wikipedia; MAP site and other pages now cite 60,000+ (growing).",
+      "sources": [
+        "https://en.wikipedia.org/wiki/Museum_of_Art_%26_Photography"
+      ]
+    }
+  },
+  "faqs": [
+    {
+      "q": "What is MAP and where is it located?",
+      "a": "MAP is a private art museum in central Bengaluru on Kasturba Road Cross, near Cubbon Park and MG Road.",
+      "sources": [
+        "https://map-india.org/about/faqs/",
+        "https://map-india.org/visit-us/"
+      ]
+    },
+    {
+      "q": "What are the opening hours?",
+      "a": "Open Tue–Sun from 10:00. Closed Mondays. Tue–Thu & Sun close 18:30 (Tue 14:00–18:30 free); Fri–Sat close 19:30.",
+      "sources": [
+        "https://map-india.org/about/faqs/"
+      ]
+    },
+    {
+      "q": "Is there free entry?",
+      "a": "Yes—free entry to all exhibitions on Tuesdays from 14:00–18:30.",
+      "sources": [
+        "https://map-india.org/about/faqs/"
+      ]
+    },
+    {
+      "q": "Is parking available?",
+      "a": "No on-site visitor parking. Use paid parking opposite the museum or street parking nearby if permitted.",
+      "sources": [
+        "https://map-india.org/terms-and-conditions/"
+      ]
+    },
+    {
+      "q": "How accessible is the museum?",
+      "a": "Wheelchair accessible, elevators, accessible restrooms, ISL & transcripts, tactile and braille resources, assistive listening, and service animals permitted.",
+      "sources": [
+        "https://map-india.org/terms-and-conditions/"
+      ]
+    },
+    {
+      "q": "Who is the Founder and who leads MAP?",
+      "a": "Founder: Abhishek Poddar. Acting Director (2025): Harish Vasudevan.",
+      "sources": [
+        "https://map-india.org/about/faqs/",
+        "https://map-india.org/about/meet-the-team/"
+      ]
+    },
+    {
+      "q": "How do I book school group visits and education programmes?",
+      "a": "Email education@map-india.org; see Learn page for current offerings.",
+      "sources": [
+        "https://map-india.org/about/faqs/",
+        "https://map-india.org/learn/"
+      ]
+    },
+    {
+      "q": "Do members get benefits for events and exhibitions?",
+      "a": "Members usually get free/priority access to many paid events and full access to online exhibitions and archives.",
+      "sources": [
+        "https://map-india.org/about/faqs/"
+      ]
+    },
+    {
+      "q": "How can I hire spaces at MAP for events?",
+      "a": "Write to bookings@map-india.org with details at least 4–6 weeks ahead; spaces include auditorium, terrace and more.",
+      "sources": [
+        "https://map-india.org/venue-for-hire/"
+      ]
+    },
+    {
+      "q": "Is there a digital guide or audio tour?",
+      "a": "Yes—MAP is on the free Bloomberg Connects app, which provides audio guides (incl. ISL), captions and accessible tours.",
+      "sources": [
+        "https://map-india.org/our-digital-guide/",
+        "https://www.bloombergconnects.org/"
+      ]
+    }
+  ],
+  "indexes": {
+    "emails": [
+      "hello@map-india.org",
+      "education@map-india.org",
+      "memberships@map-india.org",
+      "bookings@map-india.org"
+    ],
+    "important_urls": [
+      "https://map-india.org/visit-us/",
+      "https://map-india.org/events/",
+      "https://map-india.org/exhibitions/",
+      "https://map-india.org/learn/",
+      "https://map-india.org/shop/",
+      "https://map-india.org/about/",
+      "https://map-india.org/terms-and-conditions/",
+      "https://map-india.org/venue-for-hire/",
+      "https://map-india.org/content-archives/"
+    ]
+  }
+}

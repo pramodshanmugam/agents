@@ -1,6 +1,12 @@
 import logging
 from pathlib import Path
 import asyncio
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from email.mime.base import MIMEBase
+from email import encoders
+import os
 
 from dotenv import load_dotenv
 
@@ -26,6 +32,7 @@ import socketio
 import json
 import websockets
 from livekit import rtc
+from livekit.agents.llm import llm
 # uncomment to enable Krisp background voice/noise cancellation
 # from livekit.plugins import noise_cancellation
 
@@ -35,11 +42,27 @@ load_dotenv()
 
 # =============================================================================
 # CHANGE THIS LINE TO SWITCH BETWEEN ROLES:
-# Available options: "hotel_receptionist", "ai_recruiter", "f1_visa_interviewer"
+# Available options: "hotel_receptionist", "ai_recruiter", "f1_visa_interviewer", "art_museum"
 # =============================================================================
-SELECTED_ROLE = "hotel_receptionist"
+SELECTED_ROLE = "art_museum"
 # =============================================================================
 
+# Define missing variables
+WEBSOCKET_URL = "ws://localhost:8080"  # Default WebSocket URL
+F1_INTERVIEW_AGENT = "art_museum"  # Agent type for F1 interview
+
+# Simple room manager for cleanup
+class RoomManager:
+    async def cleanup_room(self, room_name: str):
+        logger.info(f"Cleaning up room: {room_name}")
+        # Add any cleanup logic here
+
+room_manager = RoomManager()
+
+async def my_shutdown_hook():
+    """Shutdown hook for cleanup operations"""
+    logger.info("Executing shutdown hook")
+    # Add any cleanup operations here
 
 class AvaTalkTTS(TTS):
     """Custom TTS that sends text to AvaTalk and returns empty audio frames for LiveKit compatibility"""
@@ -122,7 +145,7 @@ class AvaTalkChunkedStream(ChunkedStream):
         output_emitter.flush()
 
 class AvaTalkClient:
-    def __init__(self, server_url="https://0j0t0qdf-8088.use.devtunnels.ms/", session_id="visa_interview", backend_id="visa_agent"):
+    def __init__(self, server_url="https://5fhh2h7n-8088.use.devtunnels.ms/", session_id="visa_interview", backend_id="visa_agent"):
         self.sio = socketio.Client()
         self.server_url = server_url
         self.session_id = session_id
@@ -238,6 +261,11 @@ class MyAgent(Agent):
         # Load the appropriate prompt based on the role
         prompt = self._load_prompt(role)
         
+        # Load knowledge base if it's the art museum role
+        self.knowledge_base = None
+        if role == "art_museum":
+            self.knowledge_base = self._load_knowledge_base()
+        
         super().__init__(instructions=prompt)
         self.role = role
 
@@ -257,10 +285,29 @@ class MyAgent(Agent):
             logger.error(f"Error loading prompt from {prompt_file}: {e}")
             return "Your name is Kelly. You would interact with users via voice. with that in mind keep your responses concise and to the point. You are curious and friendly, and have a sense of humor."
 
+    def _load_knowledge_base(self) -> dict:
+        """Load the MAP Bengaluru knowledge base JSON file."""
+        try:
+            knowledge_base_path = Path(__file__).parent / "prompts" / "map_bengaluru_knowledgebase_v1.json"
+            with open(knowledge_base_path, 'r', encoding='utf-8') as f:
+                knowledge_base = json.load(f)
+            logger.info("Successfully loaded MAP Bengaluru knowledge base")
+            return knowledge_base
+        except Exception as e:
+            logger.error(f"Error loading knowledge base: {e}")
+            return {}
+
     async def on_enter(self):
-        # Generate a reply according to the agent's instructions
-        # The agent will use the loaded prompt to generate an appropriate greeting
-        self.session.generate_reply()
+        # Provide a simple greeting based on the role
+        if self.role == "hotel_receptionist":
+            greeting = "Hello! Welcome to the hotel Bengaluru. I'm here to help you with information about our hotel. How can I assist you today?"
+        else:
+            # For other roles, use the default behavior
+            self.session.generate_reply()
+            return
+        
+        # Send the greeting directly
+        await self.session.say(greeting)
 
     # all functions annotated with @function_tool will be passed to the LLM when this
     # agent is active
@@ -283,6 +330,198 @@ class MyAgent(Agent):
 
         return "sunny with a temperature of 70 degrees."
 
+    @function_tool
+    async def get_museum_info(
+        self, context: RunContext, info_type: str = "general"
+    ):
+        """Get information about MAP Bengaluru museum.
+        
+        Args:
+            info_type: Type of information requested (general, hours, exhibitions, events, accessibility, contact, etc.)
+        """
+        if not self.knowledge_base:
+            return "I don't have access to the museum knowledge base."
+        
+        try:
+            if info_type == "general":
+                museum_info = self.knowledge_base.get("core", {}).get("museum", {})
+                return f"MAP Bengaluru is located at {museum_info.get('address', 'Kasturba Road Cross, Bengaluru')}. It's a private art museum that opened in February 2023."
+            
+            elif info_type == "hours":
+                hours = self.knowledge_base.get("core", {}).get("museum", {}).get("hours", {})
+                return f"Museum hours: Tuesday-Sunday 10:00-18:30 (Tuesday 14:00-18:30 is free entry), Friday-Saturday until 19:30. Closed Mondays."
+            
+            elif info_type == "exhibitions":
+                exhibitions = self.knowledge_base.get("programming", {}).get("exhibitions", {}).get("current", [])
+                if exhibitions:
+                    exhibition_list = []
+                    for exhibition in exhibitions:
+                        title = exhibition.get("title", "")
+                        dates = exhibition.get("dates", {})
+                        summary = exhibition.get("summary", "")
+                        exhibition_list.append(f"• {title} ({dates.get('start', '')} to {dates.get('end', '')}): {summary}")
+                    return "Current exhibitions:\n" + "\n".join(exhibition_list)
+                return "No current exhibitions information available."
+            
+            elif info_type == "events":
+                events = self.knowledge_base.get("programming", {}).get("events", {}).get("upcoming_sample_oct_2025", [])
+                if events:
+                    event_list = []
+                    for event in events[:5]:  # Show first 5 events
+                        title = event.get("title", "")
+                        date = event.get("date", "")
+                        event_type = event.get("type", "")
+                        event_list.append(f"• {title} ({date}) - {event_type}")
+                    return "Upcoming events:\n" + "\n".join(event_list)
+                return "No upcoming events information available."
+            
+            elif info_type == "accessibility":
+                accessibility = self.knowledge_base.get("core", {}).get("museum", {}).get("accessibility", {})
+                features = []
+                if accessibility.get("wheelchair_access"): features.append("wheelchair accessible")
+                if accessibility.get("elevator"): features.append("elevator access")
+                if accessibility.get("tactile_and_braille"): features.append("tactile and braille resources")
+                if accessibility.get("isl_and_transcripts"): features.append("ISL and transcripts")
+                if accessibility.get("service_animals_allowed"): features.append("service animals allowed")
+                return f"Accessibility features: {', '.join(features)}. Contact {accessibility.get('contact_for_support', 'hello@map-india.org')} for support."
+            
+            elif info_type == "contact":
+                contacts = self.knowledge_base.get("core", {}).get("museum", {}).get("contacts", {})
+                return f"Contact information: General inquiries - {contacts.get('general_email', 'hello@map-india.org')}, Education - {contacts.get('education_email', 'education@map-india.org')}, Venue hire - {contacts.get('venue_hire', 'bookings@map-india.org')}"
+            
+            else:
+                return "I can provide information about: general museum info, hours, exhibitions, events, accessibility, and contact details. Please specify what you'd like to know."
+                
+        except Exception as e:
+            logger.error(f"Error accessing museum information: {e}")
+            return "I'm sorry, I encountered an error accessing the museum information."
+
+    @function_tool
+    async def search_museum_knowledge(
+        self, context: RunContext, query: str
+    ):
+        """Search the MAP Bengaluru knowledge base for specific information.
+        
+        Args:
+            query: The search query or question about the museum
+        """
+        if not self.knowledge_base:
+            return "I don't have access to the museum knowledge base."
+        
+        try:
+            # Simple keyword-based search in the knowledge base
+            query_lower = query.lower()
+            
+            # Check FAQs first
+            faqs = self.knowledge_base.get("faqs", [])
+            for faq in faqs:
+                if any(keyword in faq.get("q", "").lower() for keyword in query_lower.split()):
+                    return f"Q: {faq.get('q', '')}\nA: {faq.get('a', '')}"
+            
+            # Check core museum information
+            museum_info = self.knowledge_base.get("core", {}).get("museum", {})
+            
+            if "hours" in query_lower or "time" in query_lower or "open" in query_lower:
+                hours = museum_info.get("hours", {})
+                return f"Museum hours: Tuesday-Sunday 10:00-18:30 (Tuesday 14:00-18:30 is free entry), Friday-Saturday until 19:30. Closed Mondays."
+            
+            if "address" in query_lower or "location" in query_lower or "where" in query_lower:
+                address = museum_info.get("address", "")
+                getting_there = museum_info.get("getting_there", {})
+                metro_stations = getting_there.get("nearest_metro", [])
+                return f"MAP is located at {address}. Nearest metro stations: {', '.join(metro_stations)}."
+            
+            if "founder" in query_lower or "director" in query_lower or "leadership" in query_lower:
+                leadership = museum_info.get("leadership", {})
+                return f"Founder: {leadership.get('founder', 'Abhishek Poddar')}. Acting Director: {leadership.get('acting_director', 'Harish Vasudevan')}."
+            
+            if "exhibition" in query_lower or "display" in query_lower or "show" in query_lower:
+                exhibitions = self.knowledge_base.get("programming", {}).get("exhibitions", {}).get("current", [])
+                if exhibitions:
+                    exhibition_list = []
+                    for exhibition in exhibitions:
+                        title = exhibition.get("title", "")
+                        dates = exhibition.get("dates", {})
+                        summary = exhibition.get("summary", "")
+                        exhibition_list.append(f"• {title} ({dates.get('start', '')} to {dates.get('end', '')}): {summary}")
+                    return "Current exhibitions:\n" + "\n".join(exhibition_list)
+                return "No current exhibitions information available."
+            
+            # Default response
+            return "I found some information but couldn't match your specific query. You can ask about museum hours, location, exhibitions, events, accessibility, or contact information."
+            
+        except Exception as e:
+            logger.error(f"Error searching museum knowledge: {e}")
+            return "I'm sorry, I encountered an error searching the museum information."
+
+    @function_tool
+    async def send_reservation_email(
+        self, 
+        context: RunContext, 
+        recipient_email: str, 
+        customer_name: str,
+        reservation_date: str,
+        reservation_time: str,
+        number_of_guests: str = "2",
+        special_requests: str = "None"
+    ):
+        """Sends a reservation confirmation email to the customer.
+        
+        Args:
+            recipient_email: The customer's email address
+            customer_name: The customer's name
+            reservation_date: The date of the reservation
+            reservation_time: The time of the reservation
+            number_of_guests: Number of guests (default: 2)
+            special_requests: Any special requests (default: None)
+        """
+        try:
+            # Create email content
+            subject = f"Reservation Confirmation - {customer_name}"
+            
+            body = f"""
+Dear {customer_name},
+
+Thank you for your reservation with us!
+
+Reservation Details:
+- Date: {reservation_date}
+- Time: {reservation_time}
+- Number of Guests: {number_of_guests}
+- Special Requests: {special_requests}
+
+Your reservation has been confirmed. We look forward to serving you!
+
+If you need to make any changes to your reservation, please contact us at least 24 hours in advance.
+
+Best regards,
+The Restaurant Team
+            """
+            
+            msg = MIMEMultipart()
+            msg['From'] = os.getenv("EMAIL_SENDER_ADDRESS")
+            msg['To'] = recipient_email
+            msg['Subject'] = subject
+
+            msg.attach(MIMEText(body, 'plain'))
+
+            smtp_server = os.getenv("SMTP_SERVER")
+            smtp_port = int(os.getenv("SMTP_PORT", 587))
+            smtp_username = os.getenv("SMTP_USERNAME")
+            smtp_password = os.getenv("SMTP_PASSWORD")
+
+            with smtplib.SMTP(smtp_server, smtp_port) as server:
+                server.starttls()
+                server.login(smtp_username, smtp_password)
+                server.send_message(msg)
+                
+            logger.info(f"Reservation confirmation email sent to {recipient_email}")
+            return f"Reservation confirmation email sent successfully to {recipient_email}"
+            
+        except Exception as e:
+            logger.error(f"Error sending reservation email: {e}")
+            return f"Failed to send reservation email: {str(e)}"
+
 
 def prewarm(proc: JobProcess):
     proc.userdata["vad"] = silero.VAD.load()
@@ -294,7 +533,7 @@ async def entrypoint(ctx: JobContext):
     avatalk_client = None
    
     session_id = "visa_interview"  # <-- Hardcoded session ID
-    avatalk_client = AvaTalkClient(server_url="https://0j0t0qdf-8088.use.devtunnels.ms/", session_id=session_id)
+    avatalk_client = AvaTalkClient(server_url="https://5fhh2h7n-8088.use.devtunnels.ms/", session_id=session_id)
     avatalk_client.connect()
     logger.info("Successfully connected to AvaTalk TTS service")
 
@@ -302,7 +541,7 @@ async def entrypoint(ctx: JobContext):
     role = SELECTED_ROLE
     
     # Validate role
-    valid_roles = ["hotel_receptionist", "ai_recruiter", "f1_visa_interviewer"]
+    valid_roles = ["hotel_receptionist", "ai_recruiter", "f1_visa_interviewer", "art_museum"]
     if role not in valid_roles:
         logger.warning(f"Invalid role '{role}', using default 'hotel_receptionist'")
         role = "hotel_receptionist"
