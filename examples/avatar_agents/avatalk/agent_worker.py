@@ -8,6 +8,7 @@ from livekit.agents import Agent, AgentSession, JobContext, WorkerOptions, Worke
 from livekit import rtc
 from livekit.agents.voice.room_io import RoomOutputOptions
 from livekit.plugins.avatalk.avatar import AvatarSession
+from livekit.plugins import elevenlabs
 
 
 logger = logging.getLogger("avatalk-avatar-example")
@@ -18,6 +19,18 @@ load_dotenv()
 
 async def entrypoint(ctx: JobContext):
     await ctx.connect()
+    
+    # Create ElevenLabs TTS with custom voice
+    elevenlabs_api_key = os.getenv("ELEVEN_API_KEY")
+    if not elevenlabs_api_key:
+        raise ValueError("ELEVEN_API_KEY is not set")
+    
+    custom_tts = elevenlabs.TTS(
+        model="eleven_multilingual_v2",
+        voice_id="nH3dKNst9otlofjj0qlP",
+        api_key=elevenlabs_api_key,
+    )
+    
     session = AgentSession(
         # Speech-to-text (STT) is your agent's ears, turning the user's speech into text that the LLM can understand
         # See all available models at https://docs.livekit.io/agents/models/stt/
@@ -26,8 +39,9 @@ async def entrypoint(ctx: JobContext):
         # See all available models at https://docs.livekit.io/agents/models/llm/
         llm="openai/gpt-4.1-mini",
         # Text-to-speech (TTS) is your agent's voice, turning the LLM's text into speech that the user can hear
-        # See all available models as well as voice selections at https://docs.livekit.io/agents/models/tts/
-        tts="cartesia/sonic-3:9626c31c-bec5-4cca-baa8-f8ba9e84c8bc",
+        # Pass the custom TTS instance directly
+        tts=custom_tts,
+
         
         # VAD and turn detection are used to determine when the user is speaking and when the agent should respond
         # See more at https://docs.livekit.io/agents/build/turns
@@ -50,10 +64,29 @@ async def entrypoint(ctx: JobContext):
     avatar = AvatarSession()
     await avatar.start(session, room=ctx.room)
 
+    # Load MAP Bengaluru knowledge base
+    kb_path = os.path.join(os.path.dirname(__file__), "map_bengaluru_knowledgebase_v1.json")
+    with open(kb_path, "r") as f:
+        import json
+        kb_data = json.load(f)
+    
     # Custom Agent that mirrors TTS frames out-of-band without touching room output
     class AvatalkTeeAgent(Agent):
         def __init__(self) -> None:
-            super().__init__(instructions="Talk to me!")
+            instructions = """You are a friendly and knowledgeable museum assistant at the Museum of Art & Photography (MAP) in Bengaluru, India. Your role is to help visitors with information about the museum, its collection, exhibitions, events, facilities, and services.
+
+Key information about MAP:
+- Located on Kasturba Road Cross, near Cubbon Park and MG Road
+- Open Tuesday-Sunday (Closed Mondays)
+- Free entry on Tuesdays from 14:00-18:30
+- Collection of 60,000+ artworks spanning 10th century to present
+- Features digital experiences, rooftop restaurant (Cumulus by SMOOR), and MAP Store
+- Fully accessible with wheelchair access, elevators, ISL support, and more
+
+Use the knowledge base provided to answer visitor questions accurately. Be warm, helpful, and enthusiastic about the museum's offerings. If you don't know something specific, guide visitors to contact hello@map-india.org or visit map-india.org.
+
+Always provide concise, visitor-friendly responses. Mention practical details like timings, locations, and contact information when relevant."""
+            super().__init__(instructions=instructions)
 
         async def tts_node(self, text_stream, model_settings):  # type: ignore[override]
             # Buffer entire utterance (accept latency), send to Avatalk, then play audio aligned
@@ -70,7 +103,12 @@ async def entrypoint(ctx: JobContext):
                     num_channels=1,
                     quality=rtc.AudioResamplerQuality.HIGH,
                 )
-                combined_16k = resampler.resample(combined)
+                resampled_frames = resampler.push(combined)
+                resampled_frames.extend(resampler.flush())
+                if resampled_frames:
+                    combined_16k = rtc.combine_audio_frames(resampled_frames)
+                else:
+                    combined_16k = combined
             else:
                 combined_16k = combined
             wav_bytes = combined_16k.to_wav_bytes()
@@ -97,7 +135,7 @@ async def entrypoint(ctx: JobContext):
         room=ctx.room,
         room_output_options=RoomOutputOptions(transcription_enabled=True),
     )
-    session.generate_reply(instructions="say hello to the user")
+    session.generate_reply(instructions="Greet the visitor warmly and introduce yourself as a MAP museum assistant. Ask how you can help them today.")
     
 
 

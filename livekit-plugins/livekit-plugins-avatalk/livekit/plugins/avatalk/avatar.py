@@ -22,7 +22,7 @@ from .ws_client import AvatalkWSClient
 
 
 DEFAULT_SAMPLE_RATE = 16000
-DEFAULT_IMG_SIZE = 96
+DEFAULT_IMG_SIZE = 256
 
 
 @dataclass
@@ -84,7 +84,10 @@ class _TapAudioOutput(AudioOutput):
                     num_channels=self._target_ch,
                     quality=rtc.AudioResamplerQuality.HIGH,
                 )
-            combined = self._resampler.resample(combined)
+            resampled_frames = self._resampler.push(combined)
+            resampled_frames.extend(self._resampler.flush())
+            if resampled_frames:
+                combined = rtc.combine_audio_frames(resampled_frames)
 
         wav_bytes = combined.to_wav_bytes()
         self._frames.clear()
