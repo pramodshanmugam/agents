@@ -33,10 +33,10 @@ class _BufferedSegment:
 
 
 class _AvatalkAudioOutput(AudioOutput):
-    def __init__(self, *, on_segment_ready, sample_rate: Optional[int] = None) -> None:
+    def __init__(self, *, on_segment_ready, sample_rate: Optional[int] = None, next_in_chain: Optional[AudioOutput] = None) -> None:
         super().__init__(
             label="AvatalkAudioOutput",
-            next_in_chain=None,
+            next_in_chain=next_in_chain,
             sample_rate=sample_rate,
             capabilities=AudioOutputCapabilities(pause=True),
         )
@@ -53,6 +53,8 @@ class _AvatalkAudioOutput(AudioOutput):
             )
         # frame.data is PCM16 little-endian
         self._current.pcm_bytes.extend(bytes(frame.data))
+        if self.next_in_chain:
+            await self.next_in_chain.capture_frame(frame)
 
     def flush(self) -> None:
         super().flush()
@@ -63,10 +65,14 @@ class _AvatalkAudioOutput(AudioOutput):
         wav_bytes = _pcm16_to_wav(seg.pcm_bytes, seg.sample_rate, seg.num_channels)
         # hand off synchronously
         self._on_segment_ready(wav_bytes, seg.sample_rate, seg.num_channels)
+        if self.next_in_chain:
+            self.next_in_chain.flush()
 
     def clear_buffer(self) -> None:
         # Drop any buffered audio for the current segment
         self._current = None
+        if self.next_in_chain:
+            self.next_in_chain.clear_buffer()
 
 
 def _pcm16_to_wav(pcm: bytearray, sample_rate: int, num_channels: int) -> bytes:
@@ -188,7 +194,9 @@ class AvatarSession:
             # send full WAV as one or more chunks
             asyncio.create_task(self._ws.send_wav_segment(wav_bytes, sample_rate, num_channels))
 
-        agent_session.output.audio = _AvatalkAudioOutput(on_segment_ready=_on_segment_ready)
+        # Chain our sink before the existing sink so audio still plays to the room
+        prev_sink = agent_session.output.audio
+        agent_session.output.audio = _AvatalkAudioOutput(on_segment_ready=_on_segment_ready, next_in_chain=prev_sink)
 
     async def aclose(self) -> None:
         if self._ws:
