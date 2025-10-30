@@ -83,6 +83,28 @@ class AvatalkWSClient:
         # End
         await self._ws.send_str(json.dumps({"type": "UploadWavEnd"}))
 
+    async def send_pcm_start(self, sample_rate: int, num_channels: int) -> None:
+        assert self._ws is not None
+        await self._ws.send_str(json.dumps({
+            "type": "UploadPCMStart",
+            "sample_rate": int(sample_rate),
+            "channels": int(num_channels),
+        }))
+
+    async def send_pcm_chunk(self, pcm_bytes: bytes, is_last: bool = False) -> None:
+        assert self._ws is not None
+        msg = {
+            "type": "UploadPCMChunk",
+            "chunk_b64": base64.b64encode(pcm_bytes).decode("ascii"),
+        }
+        if is_last:
+            msg["is_last"] = True
+        await self._ws.send_str(json.dumps(msg))
+
+    async def send_pcm_end(self) -> None:
+        assert self._ws is not None
+        await self._ws.send_str(json.dumps({"type": "UploadPCMEnd"}))
+
     async def cancel(self) -> None:
         if self._ws:
             await self._ws.send_str(json.dumps({"type": "Cancel"}))

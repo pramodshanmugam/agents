@@ -32,47 +32,64 @@ class _BufferedSegment:
     pcm_bytes: bytearray
 
 
-class _AvatalkAudioOutput(AudioOutput):
-    def __init__(self, *, on_segment_ready, sample_rate: Optional[int] = None, next_in_chain: Optional[AudioOutput] = None) -> None:
+class _TapAudioOutput(AudioOutput):
+    """Transparent tee that mirrors audio without altering the main sink.
+
+    Buffers rtc.AudioFrame objects, then combines and resamples to 16 kHz mono
+    before emitting a WAV to the gateway at end-of-utterance.
+    """
+
+    def __init__(self, *, on_segment_ready, next_in_chain: AudioOutput, target_sr: int = 16000, target_ch: int = 1) -> None:
         super().__init__(
-            label="AvatalkAudioOutput",
+            label="AvatalkTap",
             next_in_chain=next_in_chain,
-            sample_rate=sample_rate,
-            capabilities=AudioOutputCapabilities(pause=True),
+            sample_rate=None,
+            capabilities=AudioOutputCapabilities(pause=next_in_chain.can_pause),
         )
-        self._current: Optional[_BufferedSegment] = None
         self._on_segment_ready = on_segment_ready
+        self._frames: list[rtc.AudioFrame] = []
+        self._target_sr = target_sr
+        self._target_ch = target_ch
+        self._resampler: rtc.AudioResampler | None = None
 
     async def capture_frame(self, frame: rtc.AudioFrame) -> None:
-        await super().capture_frame(frame)
-        if self._current is None:
-            self._current = _BufferedSegment(
-                sample_rate=frame.sample_rate,
-                num_channels=frame.num_channels,
-                pcm_bytes=bytearray(),
-            )
-        # frame.data is PCM16 little-endian
-        self._current.pcm_bytes.extend(bytes(frame.data))
-        if self.next_in_chain:
-            await self.next_in_chain.capture_frame(frame)
+        self._frames.append(frame)
+        await self.next_in_chain.capture_frame(frame)  # type: ignore[union-attr]
 
     def flush(self) -> None:
-        super().flush()
-        if not self._current:
-            return
-        seg = self._current
-        self._current = None
-        wav_bytes = _pcm16_to_wav(seg.pcm_bytes, seg.sample_rate, seg.num_channels)
-        # hand off synchronously
-        self._on_segment_ready(wav_bytes, seg.sample_rate, seg.num_channels)
         if self.next_in_chain:
             self.next_in_chain.flush()
+        return
 
     def clear_buffer(self) -> None:
-        # Drop any buffered audio for the current segment
-        self._current = None
-        if self.next_in_chain:
-            self.next_in_chain.clear_buffer()
+        self._frames.clear()
+        return
+
+    def on_playback_finished(
+        self,
+        *,
+        playback_position: float,
+        interrupted: bool,
+        synchronized_transcript: str | None = None,
+    ) -> None:
+        if not self._frames:
+            return
+        combined = rtc.combine_audio_frames(self._frames)
+        # Resample/remix if needed
+        if combined.sample_rate != self._target_sr or combined.num_channels != self._target_ch:
+            if self._resampler is None:
+                self._resampler = rtc.AudioResampler(
+                    input_rate=combined.sample_rate,
+                    output_rate=self._target_sr,
+                    num_channels=self._target_ch,
+                    quality=rtc.AudioResamplerQuality.HIGH,
+                )
+            combined = self._resampler.resample(combined)
+
+        wav_bytes = combined.to_wav_bytes()
+        self._frames.clear()
+        self._on_segment_ready(wav_bytes, self._target_sr, self._target_ch)
+        return
 
 
 def _pcm16_to_wav(pcm: bytearray, sample_rate: int, num_channels: int) -> bytes:
@@ -122,6 +139,11 @@ class AvatarSession:
         self._ws: Optional[AvatalkWSClient] = None
         self._first_frame_received: bool = False
         self._placeholder_task: Optional[asyncio.Task] = None
+        # Event for external consumers to wait until first frame arrives per utterance
+        self.first_frame_event: asyncio.Event = asyncio.Event()
+        # Gated start so we can buffer frames and release when audio starts
+        self.allow_video_event: asyncio.Event = asyncio.Event()
+        self._buffered_rgba_frames: list[bytes] = []
 
     async def start(self, agent_session: AgentSession, room: rtc.Room) -> None:
         # Ensure room is connected before publishing
@@ -182,21 +204,33 @@ class AvatarSession:
                 if im.size != (self._img_size, self._img_size):
                     im = im.resize((self._img_size, self._img_size))
                 rgba = im.tobytes()
-            frame = rtc.VideoFrame(self._img_size, self._img_size, rtc.VideoBufferType.RGBA, rgba)
-            self._video_source.capture_frame(frame)
+
+            if not self.allow_video_event.is_set():
+                # Buffer until audio start
+                self._buffered_rgba_frames.append(rgba)
+            else:
+                frame = rtc.VideoFrame(self._img_size, self._img_size, rtc.VideoBufferType.RGBA, rgba)
+                self._video_source.capture_frame(frame)
             if not self._first_frame_received:
                 self._first_frame_received = True
+                if not self.first_frame_event.is_set():
+                    self.first_frame_event.set()
 
         await self._ws.connect(on_frame=_on_frame)
 
-        # Wire audio output to forward WAV segments
-        def _on_segment_ready(wav_bytes: bytes, sample_rate: int, num_channels: int) -> None:
-            # send full WAV as one or more chunks
-            asyncio.create_task(self._ws.send_wav_segment(wav_bytes, sample_rate, num_channels))
+        # Audio mirroring disabled to preserve exact room playback timing.
+        # We'll add a TTS-stage mirror (out-of-band) separately.
 
-        # Chain our sink before the existing sink so audio still plays to the room
-        prev_sink = agent_session.output.audio
-        agent_session.output.audio = _AvatalkAudioOutput(on_segment_ready=_on_segment_ready, next_in_chain=prev_sink)
+    async def start_video_now(self) -> None:
+        """Allow video frames to start and flush any buffered frames paced at ~15 FPS."""
+        if not self.allow_video_event.is_set():
+            self.allow_video_event.set()
+            if self._video_source and self._buffered_rgba_frames:
+                for rgba in self._buffered_rgba_frames:
+                    frame = rtc.VideoFrame(self._img_size, self._img_size, rtc.VideoBufferType.RGBA, rgba)
+                    self._video_source.capture_frame(frame)
+                    await asyncio.sleep(1.0 / float(self._fps))
+                self._buffered_rgba_frames.clear()
 
     async def aclose(self) -> None:
         if self._ws:
